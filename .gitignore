@@ -1,4 +1,6 @@
-tools/scripts/config.ini
-tools/scripts/account.session
-tools/scripts/data/
+tools/scripts/crawler.config.ini
+tools/scripts/crawler/account.session
+tools/scripts/crawler/data/
+tools/scripts/crawler/result/
+tools/scripts/crawler_data_processor/data/
 .vscode

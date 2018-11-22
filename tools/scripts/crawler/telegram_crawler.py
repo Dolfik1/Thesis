@@ -14,6 +14,8 @@ def main():
     parser.add_argument('--chats', nargs='+',
                        required=True,
                        help='chats list to dump messages')
+    parser.add_argument('--delay', type=float, default=1,
+                       help='delay between get_history requests')
     args = parser.parse_args()
     start(args)
 
@@ -50,6 +52,7 @@ def start(args):
             while True:
                 try:
                     m = app.get_history(target, offset_id=offset_id)
+                    time.sleep(args.delay)
                 except FloodWait as e:  # For very large chats the method call can raise a FloodWait
                     print("waiting {}".format(e.x))
                     time.sleep(e.x)  # Sleep X seconds before continuing
