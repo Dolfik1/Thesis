@@ -4,14 +4,31 @@ import sys
 import argparse
 import emoji
 import re
-from os import listdir
-from os.path import dirname, isfile, join
+import errno
+from os import listdir, makedirs
+from os.path import isfile, join, isdir, dirname
 
 phone = re.compile(r"[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*")
 url = re.compile(r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)")
 email = re.compile(r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*")
 username = re.compile(r"@.{3,}")
 
+def mkdir_p(path):
+    try:
+        makedirs(path, exist_ok=True)  # Python>3.2
+    except TypeError:
+        try:
+            makedirs(path)
+        except OSError as exc: # Python >2.5
+            if exc.errno == errno.EEXIST and isdir(path):
+                pass
+            else: raise
+
+def safe_open_w(file):
+    ''' Open "path" for writing, creating any parent directories as needed.
+    '''
+    mkdir_p(dirname(file))
+    return open(file, 'w', encoding="utf-8")
 
 def text_has_emoji(text):
     for character in text:
@@ -93,7 +110,7 @@ def process_file(path, args):
 
         if (t1 is not t2 and is_valid_text(t1, args) and is_valid_text(t2, args)):
             if prev_pair:
-                a, b = prev_pair
+                _, b = prev_pair
                 if b['message_id'] == reply_message['message_id']:
                     continue
             prev_pair = (reply_message, message)
@@ -101,7 +118,7 @@ def process_file(path, args):
     return result
 
 def message_to_string(message):
-    return "> {}\n".format(prepare_text(message['text']))
+    return "> {}".format(prepare_text(message['text']))
 
 def main():
     parser = argparse.ArgumentParser()
@@ -109,6 +126,8 @@ def main():
                        help='directory with files to be processed')
     parser.add_argument('--output_dir', type=str, default='./output',
                        help='output files directory')
+    parser.add_argument('--output_file_lines', type=int, default=250000,
+                       help='count lines in data file')
     parser.add_argument('--allow_emoji', type=bool, default='true',
                        help='emoji allowed when set true')
     parser.add_argument('--allow_new_lines', type=bool, default='false',
@@ -124,18 +143,35 @@ def start(args):
     files = [f for f in listdir(args.data_dir) if isfile(join(args.data_dir, f))]
     pairs = []
     
-    dir = dirname(__file__)
-
     for f in files:
         print("Processing {}...".format(f))
-        f = join(dir, args.data_dir, f)
+        f = join(args.data_dir, f)
         pairs += process_file(f, args)
 
-    with open('somefile.txt', 'w', encoding="utf-8") as f:
-        for pair in pairs:
-            reply, message = pair
-            f.write(message_to_string(reply))
-            f.write(message_to_string(message))
+    file_number = 1
+
+    def open_file():
+        return safe_open_w(join(args.output_dir, "data{}.txt".format(file_number)))
+
+    f = open_file()
+    total_lines = 0
+    for pair in pairs:
+        reply, message = pair
+        f.write(message_to_string(reply))
+        f.write("\n")
+        f.write(message_to_string(message))
+        total_lines += 2
+
+        if total_lines >= args.output_file_lines:
+            f.close()
+            total_lines = 0
+            file_number += 1
+            f = open_file()
+        else:
+            f.write("\n")
+
+    if not f.closed:
+        f.close()
 
     print("Done!")
 
