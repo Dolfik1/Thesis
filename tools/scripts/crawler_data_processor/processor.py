@@ -12,17 +12,10 @@ phone = re.compile(r"[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*")
 url = re.compile(r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)")
 email = re.compile(r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*")
 username = re.compile(r"@.{3,}")
+re_badwords = None
 
 def mkdir_p(path):
-    try:
-        makedirs(path, exist_ok=True)  # Python>3.2
-    except TypeError:
-        try:
-            makedirs(path)
-        except OSError as exc: # Python >2.5
-            if exc.errno == errno.EEXIST and isdir(path):
-                pass
-            else: raise
+    makedirs(path, exist_ok=True)
 
 def safe_open_w(file):
     ''' Open "path" for writing, creating any parent directories as needed.
@@ -52,6 +45,7 @@ def chars_list(chars_str):
             raise argparse.ArgumentTypeError("{0} or {1} is not integer.".format(p[0], p[1]))
 
 def is_valid_text(text, args):
+
     if (len(text) > args.max_text_length
         or (not args.allow_new_lines and "\n" in text)
         or (not args.allow_emoji and text_has_emoji(text))
@@ -59,6 +53,7 @@ def is_valid_text(text, args):
         or url.search(text)
         or email.search(text)
         or username.search(text)
+        or (re_badwords and re_badwords.search(text))
         ):
         return False
     
@@ -70,7 +65,7 @@ def is_valid_text(text, args):
     return False
 
 def prepare_text(text):
-    return text.replace("\n", " ")
+    return text.replace("\n", " ").replace("  ", " ")
 
 def process_file(path, args):
     with open(path) as f:
@@ -107,7 +102,6 @@ def process_file(path, args):
 
         t1 = message['text']
         t2 = reply_message['text']
-
         if (t1 is not t2 and is_valid_text(t1, args) and is_valid_text(t2, args)):
             if prev_pair:
                 _, b = prev_pair
@@ -134,15 +128,29 @@ def main():
                        help='new lines allowed when set true')
     parser.add_argument('--max_text_length', type=int, default=300,
                        help='max message length')
+    parser.add_argument('--badwords_file', type=str, required=False,
+                       help='path to file that contains bad words separated by new line')
     parser.add_argument('--allowed_chars', type=chars_list, default=[(0, 128), (1024, 1151)],
                        help='ranges of allowed chars 0-128 1024-1151')
     args = parser.parse_args()
     start(args)
 
+def badword_to_regex_str(badword):
+    return re.escape(badword.lower().replace("\n", "")).replace("\\?", ".")
+
 def start(args):
     files = [f for f in listdir(args.data_dir) if isfile(join(args.data_dir, f))]
     pairs = []
     
+    badwords_list = None
+    if args.badwords_file:
+        with open(args.badwords_file) as f:
+            badwords_list = f.readlines()
+        rx_str = "|".join(map(badword_to_regex_str, badwords_list))
+        global re_badwords
+        print(rx_str)
+        re_badwords = re.compile(rx_str)
+
     for f in files:
         print("Processing {}...".format(f))
         f = join(args.data_dir, f)
