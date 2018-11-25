@@ -58,11 +58,13 @@ def start(args):
                     continue
                 except UsernameNotOccupied as e:
                     print(e)
+                    break
                 except Exception as e:
                     print(e)
                     print("Unknown exception, waiting 60 seconds.")
                     time.sleep(60)
                     continue
+
                 if not m.messages:
                     break
 
