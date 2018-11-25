@@ -56,9 +56,11 @@ def start(args):
                     print("waiting {}".format(e.x))
                     time.sleep(e.x)  # Sleep X seconds before continuing
                     continue
-                except Exception:
+                except Exception as e:
+                    print(e)
                     print("Unknown exception, waiting 60 seconds.")
                     time.sleep(60)
+                    continue
                 if not m.messages:
                     break
 
