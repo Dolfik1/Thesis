@@ -5,7 +5,7 @@ import argparse
 import os
 
 from pyrogram import Client
-from pyrogram.api.errors import FloodWait
+from pyrogram.api.errors import FloodWait, UsernameNotOccupied
 
 def main():
     parser = argparse.ArgumentParser()
@@ -56,6 +56,8 @@ def start(args):
                     print("waiting {}".format(e.x))
                     time.sleep(e.x)  # Sleep X seconds before continuing
                     continue
+                except UsernameNotOccupied as e:
+                    print(e)
                 except Exception as e:
                     print(e)
                     print("Unknown exception, waiting 60 seconds.")
