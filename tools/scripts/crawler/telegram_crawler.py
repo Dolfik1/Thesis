@@ -39,10 +39,12 @@ def message_to_dict(message):
 def start(args):
     app = Client("account")
     dirname = os.path.dirname(__file__)
-
+    current = 0
+    unknown_exceptions_count = 0
+    total_chats = len(args.chats)
     with app:
         for target in args.chats:
-
+            current += 1
             print("@{} processing...".format(target))
 
             save_result_path = os.path.join(dirname, args.data_dir, "{}.json".format(target))
@@ -51,6 +53,7 @@ def start(args):
             while True:
                 try:
                     m = app.get_history(target, offset_id=offset_id)
+                    unknown_exceptions_count = 0
                     time.sleep(args.delay)
                 except FloodWait as e:  # For very large chats the method call can raise a FloodWait
                     print("waiting {}".format(e.x))
@@ -62,15 +65,16 @@ def start(args):
                 except Exception as e:
                     print(e)
                     print("Unknown exception, waiting 60 seconds.")
+                    unknown_exceptions_count += 1
                     time.sleep(60)
                     continue
 
-                if not m.messages:
+                if not m.messages or unknown_exceptions_count >= 10:
                     break
 
                 offset_id = m.messages[-1].message_id
                 messages += map(message_to_dict, m.messages)
-                print("Messages: {}".format(len(messages)))
+                print("Messages: {0} | @{1} - {2} of {3}".format(len(messages), target, current, total_chats))
 
             print("Saving to {}".format(save_result_path))
             messages = list(filter_messages(messages))
