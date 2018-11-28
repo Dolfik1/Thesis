@@ -112,6 +112,142 @@ You can execute `copy_data.sh` script, to copy parsed data from container to `re
 
 @kinolepra
 
+https://combot.org/telegram/top/chats
+
+@twochannel
+
+@BinanceRussian
+
+@blacklist4
+
+@diamond_kz
+
+@savemdk
+
+@politach
+
+@PoshumimClub
+
+@chatchan
+
+@AlternativeServices
+
+@aktivistdvk
+
+@carsharingrussia
+
+@impil
+
+@ru2chhw
+
+@Flibustafreebookbotios
+
+@anime2ch
+
+@GetHack2
+
+@skiboardmoscow
+
+@ponyrzn
+
+@Callisto_Russian
+
+@ripplexrpclub
+
+@korobka_number1
+
+@flibustafre
+
+@ru2chvg
+
+@ru2chcc
+
+@ru2chcc
+
+@zavtrachat
+
+@animelampchat
+
+@dawg_chat
+
+@blackjack_ru
+
+@ponyrznspb
+
+@piterchat
+
+@fbfuckbook
+
+@ProGrow_chat
+
+@MAFIOZNIK_STUD
+
+@vlmichat
+
+@go_kh
+
+@varenichki
+
+@kievomut
+
+@spamcartel
+
+@memesdegradationchat
+
+@tonight_int
+
+@yasny_sosedi
+
+@wearedc
+
+@reestr115
+
+@ru2chkz
+
+@sovavchat
+
+@GrupChatt
+
+@pikabumsk
+
+@chechat
+
+@zyablpwnz
+
+@ss20ru
+
+@ChatDEEP
+
+@sayofthesexchatt
+
+@antisosa4
+
+@kiev_chat
+
+@impil
+
+@ToBeOrChat
+
+@tavernachat
+
+@skiboardSTEPANOVO
+
+@dvizh_history
+
+@Casual_Chat
+
+@rusyazichnie
+
+@odessa_thread
+
+@Auff_02
+
+@medovoe
+
+@ddpub
+
+
+
 https://telegram-club.ru/open?page=3&per-page=50
 
 
@@ -263,74 +399,27 @@ https://telegram-club.ru/open?page=3&per-page=50
 
 @litegroup
 
-@soc93
+@soc93 - HERE
 
-@dogschat - HERE
-
-@tomskpublic
-
-@reptiloids_chat
-
-@freedomlife1
+@dogschat
 
 @sfo_chat
 
-@trinityme
-
 @mensworldclub
 
-@leftypol
-
-@5a1544e06d02a
-
-@lingvachat
+@leftypol - here
 
 @mynutka
 
 @chat_dv
 
-@chat_obo_vsem_i_ni_o_chem
-
-@kowatnik
-
-@osmiumlc
-
-@5a24800809c7c
-
 @IvChat
 
 @ru2chfiz
 
-@chattltnew
-
-@LCFUB
-
-@psychologme
-
-@club_chat
-
-@vomrake
-
 @vlg2ch
 
-@bloop_xoxo
-
-@bsdk
-
-@chat_continent
-
-@ptalk
-
 @techno_chat
-
-@rider_pro
-
-@pirozhok
-
-@PsyPortal
-
-@jiveinc
-
 
 
 https://telegram-club.ru/open?page=11&per-page=50

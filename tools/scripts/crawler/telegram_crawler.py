@@ -7,6 +7,15 @@ import os
 from pyrogram import Client
 from pyrogram.api.errors import FloodWait, UsernameNotOccupied
 
+def mkdir_p(path):
+    os.makedirs(path, exist_ok=True)
+
+def safe_open_w(file):
+    ''' Open "path" for writing, creating any parent directories as needed.
+    '''
+    mkdir_p(os.path.dirname(file))
+    return open(file, 'w', encoding="utf-8")
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, default='data',
@@ -79,7 +88,7 @@ def start(args):
             print("Saving to {}".format(save_result_path))
             messages = list(filter_messages(messages))
             messages.reverse()
-            with open(save_result_path, "w") as outfile:
+            with safe_open_w(save_result_path) as outfile:
                 json.dump(messages, outfile)
             print("Saved!")
     print("Done")
