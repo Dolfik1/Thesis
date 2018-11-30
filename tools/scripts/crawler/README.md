@@ -118,8 +118,6 @@ https://combot.org/telegram/top/chats
 
 @BinanceRussian
 
-@blacklist4
-
 @diamond_kz
 
 @savemdk
@@ -130,21 +128,13 @@ https://combot.org/telegram/top/chats
 
 @chatchan
 
-@AlternativeServices
-
 @aktivistdvk
-
-@carsharingrussia
 
 @impil
 
 @ru2chhw
 
-@Flibustafreebookbotios
-
 @anime2ch
-
-@GetHack2
 
 @skiboardmoscow
 
@@ -156,11 +146,7 @@ https://combot.org/telegram/top/chats
 
 @korobka_number1
 
-@flibustafre
-
 @ru2chvg
-
-@ru2chcc
 
 @ru2chcc
 
@@ -175,8 +161,6 @@ https://combot.org/telegram/top/chats
 @ponyrznspb
 
 @piterchat
-
-@fbfuckbook
 
 @ProGrow_chat
 
@@ -245,7 +229,6 @@ https://combot.org/telegram/top/chats
 @medovoe
 
 @ddpub
-
 
 
 https://telegram-club.ru/open?page=3&per-page=50
