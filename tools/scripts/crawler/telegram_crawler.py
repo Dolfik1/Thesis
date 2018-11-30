@@ -23,8 +23,10 @@ def main():
     parser.add_argument('--chats', nargs='+',
                        required=True,
                        help='chats list to dump messages')
-    parser.add_argument('--delay', type=float, default=1,
+    parser.add_argument('--delay', type=float, default=3,
                        help='delay between get_history requests')
+    parser.add_argument('--session_name', type=str, default='account',
+                       help='name of session file')
     args = parser.parse_args()
     start(args)
 
@@ -46,7 +48,7 @@ def message_to_dict(message):
     )
 
 def start(args):
-    app = Client("account")
+    app = Client(args.session_name)
     dirname = os.path.dirname(__file__)
     current = 0
     unknown_exceptions_count = 0

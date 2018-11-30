@@ -1,5 +1,5 @@
 tools/scripts/crawler.config.ini
-tools/scripts/crawler/account.session
+tools/scripts/crawler/*.session
 tools/scripts/crawler/data/
 tools/scripts/crawler/result/
 tools/scripts/crawler/result_bak/
