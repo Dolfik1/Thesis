@@ -27,6 +27,10 @@ def main():
                        help='delay between get_history requests')
     parser.add_argument('--session_name', type=str, default='account',
                        help='name of session file')
+    parser.add_argument('--phone', type=str, required=False,
+                       help='phone number')
+    parser.add_argument('--code_env', type=str, required=False,
+                       help='code environment variable')
     args = parser.parse_args()
     start(args)
 
@@ -47,8 +51,31 @@ def message_to_dict(message):
         text=message.text
     )
 
+def phone_code_callback(phone_number, env_name):
+    print("Please, put code in {0} environment variable...".format(env_name))
+    attempts = 0
+    code = None
+    while code is None:
+        if attempts > 5:
+            raise Exception("Can't read environment variable {}.".format(env_name))
+        print("Waiting for code {0}/5...".format(attempts))
+
+        time.sleep(30)
+        code = os.environ.get(env_name)
+        attempts += 1
+
+    return code
+
 def start(args):
-    app = Client(args.session_name)
+    def cb(phone_number):
+        return phone_code_callback(phone_number, args.code_env)
+
+    app = Client(
+        session_name=args.session_name,
+        phone_code=None if args.code_env is None else cb,
+        phone_number=args.phone
+        )
+
     dirname = os.path.dirname(__file__)
     current = 0
     unknown_exceptions_count = 0
