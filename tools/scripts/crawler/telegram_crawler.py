@@ -29,8 +29,8 @@ def main():
                        help='name of session file')
     parser.add_argument('--phone', type=str, required=False,
                        help='phone number')
-    parser.add_argument('--code_env', type=str, required=False,
-                       help='code environment variable')
+    parser.add_argument('--code_file_path', type=str, required=False,
+                       help='path to file that stores code path')
     args = parser.parse_args()
     start(args)
 
@@ -51,28 +51,32 @@ def message_to_dict(message):
         text=message.text
     )
 
-def phone_code_callback(phone_number, env_name):
-    print("Please, put code in {0} environment variable...".format(env_name))
+def phone_code_callback(phone_number, code_file_path):
+    print("Please, put auth code in {0} file...".format(code_file_path))
     attempts = 0
     code = None
     while code is None:
         if attempts > 5:
-            raise Exception("Can't read environment variable {}.".format(env_name))
-        print("Waiting for code {0}/5...".format(attempts))
+            raise Exception("Can't read file {}.".format(code_file_path))
+        print("Waiting for auth code {0}/5...".format(attempts))
+
+        if os.path.isfile(code_file_path):
+            with open(code_file_path, 'r') as code_file:
+                code = code_file.read().replace('\n', '')
+                break
 
         time.sleep(30)
-        code = os.environ.get(env_name)
         attempts += 1
 
     return code
 
 def start(args):
     def cb(phone_number):
-        return phone_code_callback(phone_number, args.code_env)
+        return phone_code_callback(phone_number, args.code_file_path)
 
     app = Client(
         session_name=args.session_name,
-        phone_code=None if args.code_env is None else cb,
+        phone_code=None if args.code_file_path is None else cb,
         phone_number=args.phone
         )
 
