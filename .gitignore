@@ -1,4 +1,4 @@
-tools/scripts/crawler.config.ini
+tools/scripts/crawler/config.ini
 tools/scripts/crawler/*.session
 tools/scripts/crawler/data/
 tools/scripts/crawler/result/

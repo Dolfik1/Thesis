@@ -6,6 +6,7 @@ from tensorflow.python.framework import ops
 from tensorflow.contrib import rnn
 
 from tensorflow.python.util.nest import flatten
+from sgucell import SGUCell
 
 import numpy as np
 
@@ -123,6 +124,8 @@ class Model():
             cell_fn = rnn_cell.BasicLSTMCell
         elif args.model == 'nas':
             cell_fn = rnn.NASCell
+        elif args.model == 'sgu':
+            cell_fn = SGUCell
         else:
             raise Exception("model type not supported: {}".format(args.model))
 
