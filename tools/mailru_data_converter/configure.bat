@@ -1,0 +1,1 @@
+cmake -B./build/x64 -H. -DCMAKE_GENERATOR_PLATFORM=x64
