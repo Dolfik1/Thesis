@@ -33,6 +33,11 @@ int escape_csv(
 
 void write_csv_line(struct state_j * state)
 {
+	if (state->qtext == NULL || state->atext == NULL ||  state->qid == NULL)
+	{
+		return;
+	}
+
 	unsigned char * qtext_escaped;
 	unsigned char * atext_escaped;
 	
@@ -54,14 +59,16 @@ void write_csv_line(struct state_j * state)
 
 	free(qtext_escaped);
 	free(atext_escaped);
-	
-	free(cstr);
-}
 
-int j_null(void * ctx)
-{
-	fprintf(stderr, "NULL\n\n");
-	return 1;
+	free(state->qtext);
+	free(state->atext);
+	free(state->qid);
+	
+	state->qtext = NULL;
+	state->atext = NULL;
+	state->qid = NULL;
+
+	free(cstr);
 }
 
 int j_string(void * ctx, const unsigned char * stringVal,
@@ -72,16 +79,13 @@ int j_string(void * ctx, const unsigned char * stringVal,
 	
 	if (state->cur_key == 0)
 	{
-		free(state->atext);
 		state->atext_len = stringLen;
-
 		state->atext = malloc(stringLen+1);
 		state->atext[stringLen] = '\0';
 		strncpy(state->atext, stringVal, stringLen);
 	}
 	else if (state->cur_key == 1)
 	{
-		free(state->qtext);
 		state->qtext_len = stringLen;
 		state->qtext = malloc(stringLen+1);
 		state->qtext[stringLen] = '\0';
@@ -89,7 +93,6 @@ int j_string(void * ctx, const unsigned char * stringVal,
 	}
 	else if (state->cur_key == 2)
 	{
-		free(state->qid);
 		state->qid_len = stringLen;
 		state->qid = malloc(stringLen+1);
 		strncpy(state->qid, stringVal, stringLen);
@@ -127,7 +130,7 @@ void process_file(char * path, void * ctx)
 {
 	yajl_callbacks callbacks =
 	{
-		j_null,
+		NULL,
 		NULL,
 		NULL,
 		NULL,
