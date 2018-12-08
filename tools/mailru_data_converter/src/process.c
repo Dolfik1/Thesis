@@ -116,6 +116,7 @@ int j_string(void * ctx, const unsigned char * stringVal,
 	
 	if (state->cur_key == 0)
 	{
+		free(state->atext);
 		state->atext_len = stringLen;
 		state->atext = malloc(stringLen+1);
 		state->atext[stringLen] = '\0';
@@ -123,6 +124,7 @@ int j_string(void * ctx, const unsigned char * stringVal,
 	}
 	else if (state->cur_key == 1)
 	{
+		free(state->qtext);
 		state->qtext_len = stringLen;
 		state->qtext = malloc(stringLen+1);
 		state->qtext[stringLen] = '\0';
@@ -130,6 +132,7 @@ int j_string(void * ctx, const unsigned char * stringVal,
 	}
 	else if (state->cur_key == 2)
 	{
+		free(state->qid);
 		state->qid_len = stringLen;
 		state->qid = malloc(stringLen+1);
 		strncpy(state->qid, stringVal, stringLen);
