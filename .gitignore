@@ -7,3 +7,4 @@ tools/scripts/crawler_data_processor/data/
 tools/scripts/crawler_data_processor/output/
 temp
 .vscode
+*.pkl

@@ -126,6 +126,8 @@ class Model():
             cell_fn = rnn.NASCell
         elif args.model == 'sgu':
             cell_fn = SGUCell
+        elif args.model == 'sru':
+            cell_fn = rnn.SRUCell
         else:
             raise Exception("model type not supported: {}".format(args.model))
 

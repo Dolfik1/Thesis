@@ -1,187 +1,84 @@
-import time
-import json
-import sys
+import os 
+
+os.environ["PATH"] += ";{0}".format(os.getcwd())
+
 import argparse
-import emoji
-import re
-import errno
-from os import listdir, makedirs
-from os.path import isfile, join, isdir, dirname
+from common import prepare_text, chars_list, prepare_badwords_regex, safe_open_w
+from os import listdir
+from os.path import isfile, join
+import telegram
+import mailru
 
-phone = re.compile(r"[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*")
-url = re.compile(r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)")
-email = re.compile(r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*")
-username = re.compile(r"@.{3,}")
-re_badwords = None
-
-def mkdir_p(path):
-    makedirs(path, exist_ok=True)
-
-def safe_open_w(file):
-    ''' Open "path" for writing, creating any parent directories as needed.
-    '''
-    mkdir_p(dirname(file))
-    return open(file, 'w', encoding="utf-8")
-
-def text_has_emoji(text):
-    for character in text:
-        if character in emoji.UNICODE_EMOJI:
-            return True
-    return False
-
-def chars_list(chars_str):
-    for pair in chars_str.split(" "):
-        p = pair.split("-")
-        if len(p) != 2:
-            raise argparse.ArgumentTypeError("%s is an invalid pair." % pair)
-        try: 
-            p0 = int(p[0])
-            p1 = int(p[1])
-
-            if p0 > p1:
-                raise argparse.ArgumentTypeError("{0} should be less than {1}.".format(p[0], p[1]))
-            return (p0, p1)
-        except ValueError:
-            raise argparse.ArgumentTypeError("{0} or {1} is not integer.".format(p[0], p[1]))
-
-def is_valid_text(text, args):
-
-    if (len(text) > args.max_text_length
-        or (not args.allow_new_lines and "\n" in text)
-        or (not args.allow_emoji and text_has_emoji(text))
-        or phone.search(text)
-        or url.search(text)
-        or email.search(text)
-        or username.search(text)
-        or (re_badwords and re_badwords.search(text))
-        ):
-        return False
-    
-    for c in text:
-        cn = ord(c)
-        for min, max in args.allowed_chars:
-            if cn >= min and cn <= max:
-                return True
-    return False
-
-def prepare_text(text):
-    return text.replace("\n", " ").replace("  ", " ")
-
-def process_file(path, args):
-    with open(path) as f:
-        messages = list(json.load(f))
-
-    result = []
-    total = len(messages)
-    idx = 0
-
-    last_progress = 0
-    progress = 0
-
-    print("Total messages: {}".format(total))
-    
-    indexed_messages = dict()
-    for message in messages:
-        indexed_messages[message["message_id"]] = message
-    
-    prev_pair = None
-
-    for message in messages:
-        idx += 1
-        progress = int((idx / total) * 100)
-
-        if (progress % 10 == 0 and progress != last_progress):
-            last_progress = progress
-            print("{}%".format(progress))
-
-        reply_message_id = message['reply_message_id']
-        if not reply_message_id or not reply_message_id in indexed_messages:
-            continue
-
-        reply_message = indexed_messages[reply_message_id]
-
-        t1 = message['text']
-        t2 = reply_message['text']
-        if (t1 is not t2 and is_valid_text(t1, args) and is_valid_text(t2, args)):
-            if prev_pair:
-                _, b = prev_pair
-                if b['message_id'] == reply_message['message_id']:
-                    continue
-            prev_pair = (reply_message, message)
-            result.append(prev_pair)
-    return result
-
-def message_to_string(message):
-    return "> {}".format(prepare_text(message['text']))
+def string_to_result_line(text):
+    return "> {}".format(prepare_text(text))
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='./data',
-                       help='directory with files to be processed')
-    parser.add_argument('--output_dir', type=str, default='./output',
-                       help='output files directory')
-    parser.add_argument('--output_file_lines', type=int, default=250000,
-                       help='count lines in data file')
-    parser.add_argument('--allow_emoji', type=bool, default='true',
-                       help='emoji allowed when set true')
-    parser.add_argument('--allow_new_lines', type=bool, default='false',
-                       help='new lines allowed when set true')
-    parser.add_argument('--max_text_length', type=int, default=300,
-                       help='max message length')
-    parser.add_argument('--badwords_file', type=str, required=False,
-                       help='path to file that contains bad words separated by new line')
-    parser.add_argument('--allowed_chars', type=chars_list, default=[(0, 128), (1024, 1151)],
-                       help='ranges of allowed chars 0-128 1024-1151')
+    parser.add_argument("--data_dir", type=str, default="./data/telegram",
+                       help="directory with files to be processed")
+    parser.add_argument("--output_dir", type=str, default="./output",
+                       help="output files directory")
+    parser.add_argument("--output_file_lines", type=int, default=250000,
+                       help="count lines in data file")
+    parser.add_argument("--allow_emoji", type=bool, default="true",
+                       help="emoji allowed when set true")
+    parser.add_argument("--allow_new_lines", type=bool, default="false",
+                       help="new lines allowed when set true")
+    parser.add_argument("--max_text_length", type=int, default=300,
+                       help="max message length")
+    parser.add_argument("--badwords_file", type=str, required=False,
+                       help="path to file that contains bad words separated by new line")
+    parser.add_argument("--allowed_chars", type=chars_list, default=[(0, 128), (1024, 1151)],
+                       help="ranges of allowed chars 0-128 1024-1151")
+    parser.add_argument("--input", type=str, default="telegram",
+                       help="input file type, telegram or mailru")
     args = parser.parse_args()
     start(args)
 
-def badword_to_regex_str(badword):
-    return re.escape(badword.lower().replace("\n", "")).replace("\\?", ".")
-
 def start(args):
     files = [f for f in listdir(args.data_dir) if isfile(join(args.data_dir, f))]
-    pairs = []
-    
-    badwords_list = None
-    if args.badwords_file:
-        with open(args.badwords_file) as f:
-            badwords_list = f.readlines()
-        rx_str = "|".join(map(badword_to_regex_str, badwords_list))
-        global re_badwords
-        print(rx_str)
-        re_badwords = re.compile(rx_str)
-
-    for f in files:
-        print("Processing {}...".format(f))
-        f = join(args.data_dir, f)
-        pairs += process_file(f, args)
+    prepare_badwords_regex(args)
 
     file_number = 1
+    total_lines = 0
 
     def open_file():
-        return safe_open_w(join(args.output_dir, "data{}.txt".format(file_number)))
+        fpath = join(args.output_dir, "{0}{1}.txt".format(args.input, file_number))
+        return safe_open_w(fpath)
 
     f = open_file()
-    total_lines = 0
-    for pair in pairs:
-        reply, message = pair
-        f.write(message_to_string(reply))
-        f.write("\n")
-        f.write(message_to_string(message))
-        total_lines += 2
 
-        if total_lines >= args.output_file_lines:
-            f.close()
-            total_lines = 0
-            file_number += 1
-            f = open_file()
+    for fdata in files:
+        print("Processing {}...".format(fdata))
+        fdata = join(args.data_dir, fdata)
+
+        if args.input == "telegram":
+            process_file = telegram.process_file
+        elif args.input == "mailru":
+            process_file = mailru.process_file
         else:
+            raise Exception("Unsupported input type: {}".format(args.input)) 
+
+        for pair in process_file(fdata, args):
+            reply, message = pair
+            f.write(string_to_result_line(reply))
             f.write("\n")
+            f.write(string_to_result_line(message))
+            total_lines += 2
+
+            if total_lines >= args.output_file_lines:
+                f.close()
+                total_lines = 0
+                file_number += 1
+                f = open_file()
+            else:
+                f.write("\n")
+
 
     if not f.closed:
         f.close()
 
     print("Done!")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
         main()
