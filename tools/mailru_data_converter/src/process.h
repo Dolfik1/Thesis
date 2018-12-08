@@ -11,6 +11,9 @@ struct state_j
 	FILE *file;
 
 	int cur_key;
+	int is_best;
+	int best_started;
+	int best_nest;
 
 	unsigned char * qid;
 	size_t qid_len;
@@ -29,7 +32,9 @@ int escape_csv(
 	unsigned char **output);
 
 void write_csv_line(struct state_j * state);
-int j_null(void * ctx);
+
+int j_start_map(void * ctx);
+int j_end_map(void * ctx);
 
 int j_string(void * ctx, const unsigned char * stringVal,
 	size_t stringLen);

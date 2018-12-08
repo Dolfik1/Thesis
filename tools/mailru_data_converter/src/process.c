@@ -71,10 +71,47 @@ void write_csv_line(struct state_j * state)
 	free(cstr);
 }
 
+int j_start_map(void * ctx)
+{
+	struct state_j *state = (struct state_j*) ctx;
+	if (state->is_best == 1)
+	{
+		if (state->best_started == 0)
+		{
+			state->best_started = 1;
+			state->best_nest = 0;
+		}
+		else
+		{
+			state->best_nest++;
+		}
+	}
+	return 1;
+}
+
+
+int j_end_map(void * ctx)
+{
+	struct state_j *state = (struct state_j*) ctx;
+	if (state->best_started == 1)
+	{
+		if (state->best_nest == 0)
+		{
+			state->best_started = 0;
+			state->is_best = 0;
+		}
+		else
+		{
+			state->best_nest--;
+		}
+	}
+	return 1;
+}
+
+
 int j_string(void * ctx, const unsigned char * stringVal,
 	size_t stringLen)
-{
-	
+{	
 	struct state_j *state = (struct state_j*) ctx;
 	
 	if (state->cur_key == 0)
@@ -106,7 +143,12 @@ int j_map_key(void * ctx, const unsigned char * stringVal,
 	size_t stringLen)
 {
 	struct state_j * state = (struct state_j*) ctx;
-	if (strncmp("atext", stringVal, stringLen) == 0)
+
+	if (strncmp("best", stringVal, stringLen) == 0)
+	{
+		state->is_best = 1;
+	}
+	else if (state->is_best == 1 && strncmp("atext", stringVal, stringLen) == 0)
 	{
 		state->cur_key = 0;
 	}
@@ -136,9 +178,9 @@ void process_file(char * path, void * ctx)
 		NULL,
 		NULL,
 		j_string,
-		NULL,
+		j_start_map,
 		j_map_key,
-		NULL,
+		j_end_map,
 		NULL,
 		NULL,
 	};
@@ -198,6 +240,11 @@ void process_file(char * path, void * ctx)
 void process_files(int filesc, char * files[], char * output_file)
 {
 	struct state_j *state = malloc(sizeof(struct state_j));
+
+	state->cur_key = 0;
+	state->is_best = 0;
+	state->best_started = 0;
+	state->best_nest = 0;
 	state->qid = NULL;
 	state->qtext = NULL;
 	state->atext = NULL;
