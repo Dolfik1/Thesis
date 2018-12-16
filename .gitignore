@@ -1,3 +1,4 @@
+data
 tools/scripts/crawler/config.ini
 tools/scripts/crawler/*.session
 tools/scripts/crawler/data/
