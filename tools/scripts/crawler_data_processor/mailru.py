@@ -1,6 +1,5 @@
-import ijson.backends.yajl2_cffi as ijson
-#import ijson
 import re
+import csv
 from common import is_valid_text
 
 re_tags = re.compile(r'<[^>]+>')
@@ -10,18 +9,23 @@ def remove_tags(text):
 
 def process_file(path, args):
     idx = 0
-    with open(path, mode="rb") as f:
-        answers = ijson.items(f, "item")
-        for answer in answers:
+    with open(path, newline='\r\n', encoding="utf8") as f:
+        reader = csv.reader(f, delimiter=";", quotechar='"')
+        for row in reader:
 
-            if idx % 10000 == 0:
-                print("{} records processed...".format(idx))
-
-            idx += 1
-            if answer.get("errid") or not answer.get("qtext") or not answer.get("best"):
+            if len(row) != 3:
+                print("Wrong data:")
+                print(row)
                 continue
-            t1 = remove_tags(answer.get("qtext"))
-            t2 = remove_tags(answer.get("best").get("atext"))
+
+            q = row[1]
+            a = row[2]
+
+            if not q or not a:
+                continue
+            t1 = remove_tags(q)
+            t2 = remove_tags(a)
 
             if (t1 is not t2 and is_valid_text(t1, args) and is_valid_text(t2, args)):
                 yield (t1, t2)
+            

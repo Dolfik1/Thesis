@@ -45,6 +45,8 @@ def main():
                        help='how often to decay the learning rate')
     parser.add_argument('--set_learning_rate', type=float, default=-1,
                        help='reset learning rate to this value (if greater than zero)')
+    parser.add_argument('--allowed_chars', type=str, default=[ 2, 3, 9, 10, 13, (32,126), (1040,1103) ],
+                       help='list of allowed chars')
     args = parser.parse_args()
     train(args)
 
