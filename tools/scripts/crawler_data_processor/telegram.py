@@ -1,5 +1,8 @@
 import json
+import os
 from common import is_valid_text
+
+os.environ["PATH"] += ";{0}".format(os.getcwd())
 
 def process_file(path, args):
     with open(path) as f:

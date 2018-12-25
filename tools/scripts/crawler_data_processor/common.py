@@ -45,7 +45,7 @@ def is_valid_text(text, args):
     return False
 
 def prepare_text(text):
-    return text.replace("\n", " ").replace("  ", " ")
+    return text.replace("\r\n", " ").replace("\n", " ").replace("  ", " ")
 
     
 def badword_to_regex_str(badword):

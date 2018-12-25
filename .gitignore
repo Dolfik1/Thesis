@@ -7,5 +7,6 @@ tools/scripts/crawler/result_bak/
 tools/scripts/crawler_data_processor/data/
 tools/scripts/crawler_data_processor/output/
 temp
+tmp
 .vscode
 *.pkl

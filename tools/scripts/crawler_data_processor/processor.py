@@ -20,9 +20,9 @@ def main():
                        help="output files directory")
     parser.add_argument("--output_file_lines", type=int, default=250000,
                        help="count lines in data file")
-    parser.add_argument("--allow_emoji", type=bool, default="true",
+    parser.add_argument("--allow_emoji", type=bool, default=True,
                        help="emoji allowed when set true")
-    parser.add_argument("--allow_new_lines", type=bool, default="false",
+    parser.add_argument("--allow_new_lines", type=bool, default=False,
                        help="new lines allowed when set true")
     parser.add_argument("--max_text_length", type=int, default=300,
                        help="max message length")
