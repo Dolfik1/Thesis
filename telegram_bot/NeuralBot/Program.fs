@@ -38,7 +38,7 @@ let makeApiRequestAsync apiUrl (text: string) =
     async {
         let json = NeuralApiRequest.Root(text)
         let! resp = json.JsonValue.RequestAsync(apiUrl, "POST", Seq.empty)
-        
+        printfn "%s" text
         return
             match resp.Body with 
             | HttpResponseBody.Text x -> x |> NeuralApiResponse.Parse

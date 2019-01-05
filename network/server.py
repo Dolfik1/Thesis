@@ -2,7 +2,7 @@ import falcon
 import argparse
 import json
 from wsgiref import simple_server
-from chatbot import Chatbot, add_args
+from t2t.chatbot import Chatbot, add_args
 
 
 class RequireJSON(object):
@@ -94,10 +94,8 @@ def main():
     parser = argparse.ArgumentParser()
     add_args(parser)
     args = parser.parse_args()
-    chatbot = Chatbot(save_dir=args.save_dir, n=args.n, prime=args.prime,
-                      beam_width=args.beam_width,
-                      temperature=args.temperature, topn=args.topn,
-                      relevance=args.relevance)
+
+    chatbot = Chatbot(args)
     chatbot.start()
     app = falcon.API(
         middleware=[

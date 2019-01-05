@@ -1,11 +1,11 @@
 data
 tools/scripts/crawler/config.ini
 tools/scripts/crawler/*.session
-tools/scripts/crawler/data/
-tools/scripts/crawler/result/
-tools/scripts/crawler/result_bak/
-tools/scripts/crawler_data_processor/data/
-tools/scripts/crawler_data_processor/output/
+result
+result_bak
+output
+bak
+__pycache__
 temp
 tmp
 .vscode
