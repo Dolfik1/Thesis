@@ -4,11 +4,17 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Bot.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="Data.fs" />
+    <Compile Include="Api.fs" />
+    <Compile Include="Commands.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ExtCore" Version="0.8.46" />
     <PackageReference Include="FSharp.Data" Version="3.0.0" />
-    <PackageReference Include="Funogram" Version="1.2.4" />
+    <PackageReference Include="Funogram" Version="1.2.5" />
+    <PackageReference Include="LiteDB.FSharp" Version="2.6.0" />
   </ItemGroup>
 </Project>
