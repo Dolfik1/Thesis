@@ -34,11 +34,13 @@ def add_args(parser, local=False):
     help='directory with user problems')
 
 def _create_hparams(args):
-  return trainer_lib.create_hparams(
+  hparams = trainer_lib.create_hparams(
     constants.HPARAMS_SET_VALUE,
     None, # FLAGS.hparams
     data_dir=os.path.expanduser(args.data_dir),
     problem_name=constants.PROBLEM_VALUE)
+  hparams.sampling_method = "random"
+  return hparams
 
 def _save_until_eos(ids, skip=False):
   """Strips everything after the first <EOS> token, which is normally 1."""

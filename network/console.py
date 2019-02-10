@@ -1,12 +1,10 @@
-# coding=utf-8
-
 from __future__ import print_function
-from chatbot import Chatbot, add_args
+from t2t.chatbot import Chatbot, add_args
 import argparse
 
 def main():
   parser = argparse.ArgumentParser()
-  add_args(parser, True)
+  add_args(parser)
   args = parser.parse_args()
   chatbot = Chatbot(args)
   chatbot.start()

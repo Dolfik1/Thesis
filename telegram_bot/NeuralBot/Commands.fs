@@ -50,9 +50,9 @@ let onSay botContext (context: UpdateContext) =
 
         async {
             sendChatAction chatId ChatAction.Typing |> Bot.execute context
-            // let! resp = makeApiRequestAsync botContext.ApiUrl text
+            let! resp = makeApiRequestAsync botContext.ApiUrl text
             // sendMessage chatId resp.Answer |> Bot.execute context
-            makeInlineRequest chatId "test" "1234" |> Bot.execute context
+            makeInlineRequest chatId resp.Answer "1234" |> Bot.execute context
             ()
         } |> Async.Catch |> Async.Ignore |> Async.Start
     } |> ignore

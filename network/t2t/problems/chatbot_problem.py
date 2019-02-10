@@ -11,11 +11,11 @@ class ChatbotProblem(text_problems.Text2TextProblem):
 
   @property
   def approx_vocab_size(self):
-    return 2**19#2**20  # ~1kk
+    return 2**19 #2**20  # ~1kk
 
   @property
   def max_subtoken_length(self):
-    return 200
+    return None
 
   @property
   def is_generate_per_split(self):
@@ -28,17 +28,17 @@ class ChatbotProblem(text_problems.Text2TextProblem):
     # 10% evaluation data
     return [{
         "split": problem.DatasetSplit.TRAIN,
-        "shards": 9,
+        "shards": 1,
     }, {
         "split": problem.DatasetSplit.EVAL,
-        "shards": 1,
+        "shards": 9,
     }]
 
   def generate_samples(self, data_dir, tmp_dir, dataset_split):
     del tmp_dir
     del dataset_split
 
-    files = os.listdir(data_dir)
+    files = [f for f in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, f))]
 
 
     for file in files:
