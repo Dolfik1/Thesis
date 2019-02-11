@@ -1,6 +1,5 @@
 module NeuralBot.Data
 
-open ExtCore
 open LiteDB
 open NeuralBot.Types
 

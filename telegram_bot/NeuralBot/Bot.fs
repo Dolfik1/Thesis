@@ -5,13 +5,9 @@ open Funogram.Bot
 open Funogram.Types
 open Funogram.RequestsTypes
 
-let execute (context: UpdateContext) method =
+let execute (config: BotConfig) method =
     let r =
         method 
-        |> api context.Config
+        |> api config
         |> Async.RunSynchronously
-    printfn "%s" (r.ToString())
     ()
-    
-    
-let cast f = upcast f : IRequestBase<'a>

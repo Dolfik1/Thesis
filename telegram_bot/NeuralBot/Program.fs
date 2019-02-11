@@ -4,9 +4,7 @@ open Funogram.Bot
 
 open NeuralBot
 open NeuralBot.Types
-    
-let update botContext context = 
-    Commands.onSay botContext context |> ignore
+open Akkling
     
 [<EntryPoint>]
 let main argv =
@@ -15,14 +13,22 @@ let main argv =
         ApiUrl = argv.[1]
     }
 
+    let system = System.create "neuralbot" (Configuration.load())
     match argv.Length with
     | 0 | 1 -> printf "Please specify bot token as an first argument and api url as an second argument."
     | _ ->
-        let update = update botContext
-        startBot {
-            defaultConfig with Token = argv.[0]
-        } update None
+        let config = { defaultConfig with Token = argv.[0] }
+    
+        let outputGateActorRef = Actors.createOutputGate config |> spawn system ActorsNames.outputGate
+        let chatsActorRef = Actors.createChatsActor outputGateActorRef |> spawn system ActorsNames.chats
+        let updatesActor = Actors.createUpdatesActor chatsActorRef |> spawn system ActorsNames.updates
+
+        let update context =
+            updatesActor <! context.Update
+        
+        startBot config update None
         |> Async.RunSynchronously
 
     botContext.DataContext |> Data.dispose
+    system.Dispose()
     0
