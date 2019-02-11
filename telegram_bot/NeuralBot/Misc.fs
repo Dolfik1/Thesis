@@ -1,11 +1,8 @@
 module NeuralBot.Misc
 
+open System
 open Akka.Actor
-open System
-open System
 open Akkling
-open Akkling
-open Funogram
 open Funogram
 open Funogram.Types
 

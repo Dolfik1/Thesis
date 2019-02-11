@@ -23,8 +23,17 @@ let init () =
 let dispose context =
     context.Db.Dispose()
 
-let insertScore context (score: UserScore) =
-    async {
-        let collection = context.Db.GetCollection<UserScore>("scores")
-        collection.Insert score |> ignore
-    }
+let insertScore (score: UserScore) context =
+    let collection = context.Db.GetCollection<UserScore>("scores")
+    collection.Insert score |> ignore
+    score
+
+let updateScoreValue (id: string) (value: int) context =
+    let collection = context.Db.GetCollection<UserScore>("scores")
+    let oid = ObjectId(id)
+    let score = collection.FindOne(fun x -> x.Id = oid)
+    let value = LanguagePrimitives.EnumOfValue value
+    let score = { score with Score = Some value }
+    collection.Update score |> ignore
+    score
+

@@ -3,3 +3,5 @@ obj
 .vs
 .idea
 run.bat
+*.DotSettings.user
+*.db

@@ -5,10 +5,10 @@ open Akkling
 open Akkling.Persistence
 open Funogram
 open Funogram.Bot
-open Funogram.RequestsTypes
 open Funogram.Types
 open Misc
 open NeuralBot
+open NeuralBot.Types
 
 type ChatActorMessage = ProcessTextMessage of Message | Start | ToggleRating | ToggleDisabled
 type ChatsActorMessage = Chat * ChatActorMessage
@@ -16,7 +16,16 @@ type ChatsActorMessage = Chat * ChatActorMessage
 type ChatActorState = { Chat: Chat; RatingEnabled: bool; Disabled: bool }
 let defaultChatActorState chat = { Chat = chat; RatingEnabled = false; Disabled = false }
 
-let createOutputGate botConfig = props(fun mailbox ->
+let createStorageActor context = props(fun mailbox ->
+    let rec loop () =
+        actor {
+            let! (fn: Types.DataContext -> 'a) = mailbox.Receive()
+            mailbox.Sender() <! fn context
+            return! loop ()
+        }
+    loop ())
+
+let createOutputGateActor botConfig = props(fun mailbox ->
     let rec loop () =
         actor {
            let! message = mailbox.Receive()
@@ -25,7 +34,7 @@ let createOutputGate botConfig = props(fun mailbox ->
         }
     loop ())
 
-let createChatActor outputGate initialState = propsPersist(fun mailbox ->
+let createChatActor outputGate storage initialState = propsPersist(fun mailbox ->
     let rec loop (state: ChatActorState) =
         actor {
             let! action = mailbox.Receive()
@@ -37,15 +46,19 @@ let createChatActor outputGate initialState = propsPersist(fun mailbox ->
                         if not state.Disabled then
                             outputGate <! (Api.sendChatAction m.Chat.Id ChatAction.Typing |> castRequest)
                             async {
+                                let from = m.From.Value
+                                let response = "Hello, world"
+                                let score = Data.createScore from.Id from.Username
+                                                from.FirstName from.LastName text response None
+
+                                storage <! Data.insertScore score
                                 // let! resp = NeuralBot.Api.makeApiRequestAsync "" text
                                 // sendMessage chatId resp.Answer |> Bot.execute context
-                                // makeInlineRequest (m.Chat.Id) resp.Answer "1234"
-                                let text = "Hello, world"
                                 return
                                     if state.RatingEnabled then
-                                        makeInlineRequest m.Chat.Id text (m.MessageId |> string)
+                                        makeInlineRequest m.Chat.Id response (score.Id |> string)
                                     else
-                                        makeTextRequest m.Chat.Id text
+                                        makeTextRequest m.Chat.Id response
                             } |!> outputGate
                         else ()
                     | None -> ()
@@ -66,7 +79,7 @@ let createChatActor outputGate initialState = propsPersist(fun mailbox ->
         }
     loop initialState)
 
-let createChatsActor (outputGate: IActorRef<IBotRequest>) = propsPersist(fun mailbox ->
+let createChatsActor outputGate storage = propsPersist(fun mailbox ->
     let rec loop (state: Dictionary<int64, IActorRef<ChatActorMessage>>) =
         actor {
             let! (r: ChatsActorMessage) = mailbox.Receive()
@@ -78,7 +91,7 @@ let createChatsActor (outputGate: IActorRef<IBotRequest>) = propsPersist(fun mai
                 | true -> actorRef
                 | false ->
                     let id = chat.Id |> string
-                    let actorRef = (defaultChatActorState chat |> createChatActor outputGate)
+                    let actorRef = (defaultChatActorState chat |> createChatActor outputGate storage)
                                    |> spawnChildren mailbox (ActorsNames.chat id)
                     state.Add(chat.Id, actorRef)
                     actorRef
@@ -87,7 +100,7 @@ let createChatsActor (outputGate: IActorRef<IBotRequest>) = propsPersist(fun mai
         }
     loop (new Dictionary<int64, IActorRef<ChatActorMessage>>()))
 
-let createUpdatesActor (chatsActorRef: IActorRef<ChatsActorMessage>) = props(fun mailbox ->
+let createUpdatesActor (chatsActorRef: IActorRef<ChatsActorMessage>) outputGate storage = props(fun mailbox ->
     let rec loop () =
         actor {
             let! updateContext = mailbox.Receive()
@@ -103,6 +116,16 @@ let createUpdatesActor (chatsActorRef: IActorRef<ChatsActorMessage>) = props(fun
                 match r with
                 | true -> chatsActorRef <! action (ProcessTextMessage x)
                 | false -> ()
+            | UpdateType.CallbackQuery q ->
+                let data = q.Data |> Option.defaultValue ""
+                let blocks = data.Split("_")
+                match blocks.Length with
+                | 2 ->
+                    let id = blocks.[0]
+                    let score = blocks.[1] |> int
+                    storage <! Data.updateScoreValue id score
+                    outputGate <! (Api.answerCallbackQueryBase (Some q.Id) (Some "Запомнил!") (Some false) None None |> castRequest)
+                | _ -> ()
             | _ -> ()
             return! loop ()
         }

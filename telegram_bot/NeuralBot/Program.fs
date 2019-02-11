@@ -19,9 +19,12 @@ let main argv =
     | _ ->
         let config = { defaultConfig with Token = argv.[0] }
     
-        let outputGateActorRef = Actors.createOutputGate config |> spawn system ActorsNames.outputGate
-        let chatsActorRef = Actors.createChatsActor outputGateActorRef |> spawn system ActorsNames.chats
-        let updatesActor = Actors.createUpdatesActor chatsActorRef |> spawn system ActorsNames.updates
+        let storageActorRef = Actors.createStorageActor botContext.DataContext |> spawn system ActorsNames.storage 
+        let outputGateActorRef = Actors.createOutputGateActor config |> spawn system ActorsNames.outputGate
+        let chatsActorRef = Actors.createChatsActor outputGateActorRef storageActorRef |> spawn system ActorsNames.chats
+        let updatesActor =
+            Actors.createUpdatesActor chatsActorRef outputGateActorRef storageActorRef
+            |> spawn system ActorsNames.updates
 
         let update context =
             updatesActor <! context

@@ -8,15 +8,16 @@ type DataContext = {
 
 type ReplyScore = VeryBad = 0 | Bad = 1 | Average = 2 | Good = 3 | VeryGood = 4
 
+[<CLIMutable>]
 type UserScore = {
     Id: ObjectId
     UserId: int64
-    Username: string
+    Username: string option
     FirstName: string
-    LastName: string
+    LastName: string option
     UserMessage: string
     BotMessage: string
-    Score: ReplyScore
+    Score: ReplyScore option
 }
 
 type BotContext = {
