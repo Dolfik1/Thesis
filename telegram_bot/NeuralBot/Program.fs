@@ -24,7 +24,7 @@ let main argv =
         let updatesActor = Actors.createUpdatesActor chatsActorRef |> spawn system ActorsNames.updates
 
         let update context =
-            updatesActor <! context.Update
+            updatesActor <! context
         
         startBot config update None
         |> Async.RunSynchronously
