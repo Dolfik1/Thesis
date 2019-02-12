@@ -12,6 +12,7 @@ open NeuralBot.Types
 
 type ChatActorMessage = ProcessTextMessage of Message | Start | ToggleRating | ToggleDisabled
 type ChatsActorMessage = Chat * ChatActorMessage
+type StorageActorMessage<'a> = Execute of (Types.DataContext -> Async<'a>)
 
 type ChatActorState = { Chat: Chat; RatingEnabled: bool; Disabled: bool }
 let defaultChatActorState chat = { Chat = chat; RatingEnabled = false; Disabled = false }
@@ -19,8 +20,9 @@ let defaultChatActorState chat = { Chat = chat; RatingEnabled = false; Disabled 
 let createStorageActor context = props(fun mailbox ->
     let rec loop () =
         actor {
-            let! (fn: Types.DataContext -> 'a) = mailbox.Receive()
-            mailbox.Sender() <! fn context
+            let! (action: StorageActorMessage<'a>) = mailbox.Receive()
+            match action with
+            | Execute fn -> fn context |> Async.StartAsTask |> ignore
             return! loop ()
         }
     loop ())
@@ -29,7 +31,12 @@ let createOutputGateActor botConfig = props(fun mailbox ->
     let rec loop () =
         actor {
            let! message = mailbox.Receive()
-           message |> Bot.execute botConfig
+           async {
+             let! result = message |> Api.apiUntyped botConfig
+             match result with
+             | Result.Ok x -> ()
+             | Result.Error e -> printfn "Error: %s" e.Description
+           } |> Async.Start
            return! loop () 
         }
     loop ())
@@ -51,14 +58,19 @@ let createChatActor outputGate storage initialState = propsPersist(fun mailbox -
                                 let score = Data.createScore from.Id from.Username
                                                 from.FirstName from.LastName text response None
 
-                                storage <! Data.insertScore score
+                                storage <! Execute (Data.insertScore score)
                                 // let! resp = NeuralBot.Api.makeApiRequestAsync "" text
                                 // sendMessage chatId resp.Answer |> Bot.execute context
+                                
+                                let replyMessageId =
+                                    if state.Chat.Type = "group" || state.Chat.Type = "supergroup"
+                                    then Some m.MessageId else None 
+                                
                                 return
                                     if state.RatingEnabled then
-                                        makeInlineRequest m.Chat.Id response (score.Id |> string)
+                                        makeInlineRequestReply (ChatId.Int m.Chat.Id) response replyMessageId (score.Id |> string)
                                     else
-                                        makeTextRequest m.Chat.Id response
+                                        makeTextRequestReply m.Chat.Id response replyMessageId
                             } |!> outputGate
                         else ()
                     | None -> ()
@@ -123,7 +135,7 @@ let createUpdatesActor (chatsActorRef: IActorRef<ChatsActorMessage>) outputGate 
                 | 2 ->
                     let id = blocks.[0]
                     let score = blocks.[1] |> int
-                    storage <! Data.updateScoreValue id score
+                    storage <! Execute (Data.updateScoreValue id score)
                     outputGate <! (Api.answerCallbackQueryBase (Some q.Id) (Some "Запомнил!") (Some false) None None |> castRequest)
                 | _ -> ()
             | _ -> ()

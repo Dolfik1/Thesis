@@ -46,12 +46,13 @@ let private createInlineKeyboard pairId =
        ] |> List.toSeq ] |> List.toSeq
     { InlineKeyboard = buttons }
 
-
 let makeTextRequest chatId text = 
     Api.sendMessage chatId text |> castRequest
+
+let makeTextRequestReply chatId text replyMessageId = 
+    Api.sendMessageReply chatId text replyMessageId |> castRequest
     
-let makeInlineRequest chatId text pairId =
+let makeInlineRequestReply chatId text replyMessageId pairId =
     let markup = createInlineKeyboard pairId |> Markup.InlineKeyboardMarkup
-    Api.sendMessageMarkup chatId text markup |> castRequest
+    Api.sendMessageBase chatId text None None None replyMessageId (Some markup) |> castRequest
     
-let selectUser system name = sprintf "user/%s" name |> select system

@@ -5,7 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Misc.fs" />
-    <Compile Include="Bot.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Data.fs" />
     <Compile Include="Api.fs" />
@@ -16,7 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Akkling.Persistence" Version="0.9.3" />
     <PackageReference Include="FSharp.Data" Version="3.0.0" />
-    <PackageReference Include="Funogram" Version="1.2.7" />
+    <PackageReference Include="Funogram" Version="1.2.9" />
     <PackageReference Include="LiteDB.FSharp" Version="2.6.0" />
   </ItemGroup>
 </Project>
