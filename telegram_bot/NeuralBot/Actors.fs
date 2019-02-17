@@ -8,9 +8,8 @@ open Funogram.Bot
 open Funogram.Types
 open Misc
 open NeuralBot
-open NeuralBot.Types
 
-type ChatActorMessage = ProcessTextMessage of Message | Start | ToggleRating | ToggleDisabled
+type ChatActorMessage = ProcessTextMessage of Message * User | Start | ToggleRating | ToggleDisabled
 type ChatsActorMessage = Chat * ChatActorMessage
 type StorageActorMessage<'a> = Execute of (Types.DataContext -> Async<'a>)
 
@@ -41,31 +40,44 @@ let createOutputGateActor botConfig = props(fun mailbox ->
         }
     loop ())
 
-let createChatActor outputGate storage initialState = propsPersist(fun mailbox ->
+let createChatActor apiUrl outputGate storage initialState = propsPersist(fun mailbox ->
     let rec loop (state: ChatActorState) =
         actor {
             let! action = mailbox.Receive()
+            let isGroupChat (chat: Chat) =
+                chat.Type = "group" || chat.Type = "supergroup"
+                
+            let shouldMakeAnswer (message: Message) (bot: User) =
+                match state.Disabled with
+                | false ->
+                    match isGroupChat message.Chat with
+                    | true ->
+                        match message.ReplyToMessage with
+                        | Some m -> m.From = Some bot
+                        | None -> false
+                    | false -> false
+                | true -> false
+                
             let state =
                 match action with
-                | ChatActorMessage.ProcessTextMessage m ->
+                | ChatActorMessage.ProcessTextMessage (m, u) ->
                     match m.Text with
                     | Some text ->
-                        if not state.Disabled then
+                        if shouldMakeAnswer m u then
                             outputGate <! (Api.sendChatAction m.Chat.Id ChatAction.Typing |> castRequest)
                             async {
                                 let from = m.From.Value
-                                let response = "Hello, world"
+                                let! resp = NeuralBot.Api.makeApiRequestAsync apiUrl text
+                                let response = resp.Answer
+                                //let response = "Hello, world"
                                 let score = Data.createScore from.Id from.Username
                                                 from.FirstName from.LastName text response None
 
                                 storage <! Execute (Data.insertScore score)
-                                // let! resp = NeuralBot.Api.makeApiRequestAsync "" text
-                                // sendMessage chatId resp.Answer |> Bot.execute context
                                 
                                 let replyMessageId =
-                                    if state.Chat.Type = "group" || state.Chat.Type = "supergroup"
-                                    then Some m.MessageId else None 
-                                
+                                    if isGroupChat state.Chat
+                                    then Some m.MessageId else None
                                 return
                                     if state.RatingEnabled then
                                         makeInlineRequestReply (ChatId.Int m.Chat.Id) response replyMessageId (score.Id |> string)
@@ -91,7 +103,7 @@ let createChatActor outputGate storage initialState = propsPersist(fun mailbox -
         }
     loop initialState)
 
-let createChatsActor outputGate storage = propsPersist(fun mailbox ->
+let createChatsActor apiUrl outputGate storage = propsPersist(fun mailbox ->
     let rec loop (state: Dictionary<int64, IActorRef<ChatActorMessage>>) =
         actor {
             let! (r: ChatsActorMessage) = mailbox.Receive()
@@ -103,7 +115,7 @@ let createChatsActor outputGate storage = propsPersist(fun mailbox ->
                 | true -> actorRef
                 | false ->
                     let id = chat.Id |> string
-                    let actorRef = (defaultChatActorState chat |> createChatActor outputGate storage)
+                    let actorRef = (defaultChatActorState chat |> createChatActor apiUrl outputGate storage)
                                    |> spawnChildren mailbox (ActorsNames.chat id)
                     state.Add(chat.Id, actorRef)
                     actorRef
@@ -125,8 +137,9 @@ let createUpdatesActor (chatsActorRef: IActorRef<ChatsActorMessage>) outputGate 
                     cmd "/toggle_rating" (fun _ -> chatsActorRef <! action ToggleRating)
                     cmd "/toggle_bot" (fun _ -> chatsActorRef <! action ToggleDisabled)
                 ]
+                
                 match r with
-                | true -> chatsActorRef <! action (ProcessTextMessage x)
+                | true -> chatsActorRef <! action (ProcessTextMessage (x, updateContext.Me))
                 | false -> ()
             | UpdateType.CallbackQuery q ->
                 let data = q.Data |> Option.defaultValue ""

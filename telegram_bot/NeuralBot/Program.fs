@@ -18,10 +18,9 @@ let main argv =
     | 0 | 1 -> printf "Please specify bot token as an first argument and api url as an second argument."
     | _ ->
         let config = { defaultConfig with Token = argv.[0] }
-    
         let storageActorRef = Actors.createStorageActor botContext.DataContext |> spawn system ActorsNames.storage 
         let outputGateActorRef = Actors.createOutputGateActor config |> spawn system ActorsNames.outputGate
-        let chatsActorRef = Actors.createChatsActor outputGateActorRef storageActorRef |> spawn system ActorsNames.chats
+        let chatsActorRef = Actors.createChatsActor (botContext.ApiUrl) outputGateActorRef storageActorRef |> spawn system ActorsNames.chats
         let updatesActor =
             Actors.createUpdatesActor chatsActorRef outputGateActorRef storageActorRef
             |> spawn system ActorsNames.updates
