@@ -55,7 +55,7 @@ let createChatActor apiUrl outputGate storage initialState = propsPersist(fun ma
                         match message.ReplyToMessage with
                         | Some m -> m.From = Some bot
                         | None -> false
-                    | false -> false
+                    | false -> true
                 | true -> false
                 
             let state =
